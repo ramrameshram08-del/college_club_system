@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}DBMS Showcase Reports - College Club System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📊 DBMS Showcase Reports</h1>
+    <p class="subtitle">Demonstrating advanced SQL concepts: Multi-table JOINs, GROUP BY, HAVING, and Aggregates.</p>
+</div>
+
+<!-- Report 1: Most Popular Events -->
+<div class="section-card">
+    <div class="report-header">
+        <h2>1. Most Popular Events</h2>
+        <span class="sql-tag">Concepts: INNER JOIN &bull; LEFT JOIN &bull; GROUP BY &bull; COUNT() &bull; ORDER BY</span>
+    </div>
+    <p class="text-muted">Calculates total active registrations per event by joining EVENT, CLUB, and REGISTRATION.</p>
+    {% if report1 %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Event ID</th>
+                    <th>Event Name</th>
+                    <th>Club Name</th>
+                    <th>Date</th>
+                    <th>Active Registrations</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report1 %}
+                <tr>
+                    <td>#{{ row[0] }}</td>
+                    <td><strong>{{ row[1] }}</strong></td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                    <td><span class="badge badge-success">{{ row[4] }} students</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">No report data available.</p>
+    {% endif %}
+</div>
+
+<!-- Report 2: Clubs with Most Members (HAVING Clause) -->
+<div class="section-card mt-20">
+    <div class="report-header">
+        <h2>2. Active Clubs (Filtered with <code>HAVING COUNT >= 2</code>)</h2>
+        <span class="sql-tag">Concepts: GROUP BY &bull; HAVING clause &bull; Aggregates</span>
+    </div>
+    <p class="text-muted">Uses the <code>HAVING</code> clause to filter grouped records after aggregation (only clubs with &ge; 2 members).</p>
+    {% if report2 %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Club Name</th>
+                    <th>Category</th>
+                    <th>Faculty Coordinator</th>
+                    <th>Total Members</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report2 %}
+                <tr>
+                    <td><strong>{{ row[0] }}</strong></td>
+                    <td><span class="badge badge-info">{{ row[1] }}</span></td>
+                    <td>{{ row[2] }}</td>
+                    <td><span class="badge badge-club">{{ row[3] }} members</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">No clubs meet the criteria.</p>
+    {% endif %}
+</div>
+
+<!-- Report 3: High Participation Students -->
+<div class="section-card mt-20">
+    <div class="report-header">
+        <h2>3. High-Participation Students (> 1 Event Registrations)</h2>
+        <span class="sql-tag">Concepts: JOIN &bull; WHERE &bull; GROUP BY &bull; HAVING COUNT > 1</span>
+    </div>
+    <p class="text-muted">Identifies enthusiastic students who have registered for more than one campus event.</p>
+    {% if report3 %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Department</th>
+                    <th>Year</th>
+                    <th>Events Registered</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report3 %}
+                <tr>
+                    <td><strong>{{ row[0] }}</strong></td>
+                    <td>{{ row[1] }}</td>
+                    <td>Year {{ row[2] }}</td>
+                    <td><span class="badge badge-warning">{{ row[3] }} events</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">No students found with multiple registrations.</p>
+    {% endif %}
+</div>
+
+<!-- Report 4: Department-wise Club Participation -->
+<div class="section-card mt-20">
+    <div class="report-header">
+        <h2>4. Department-wise Club Participation</h2>
+        <span class="sql-tag">Concepts: COUNT(DISTINCT) &bull; GROUP BY &bull; Cross-domain analysis</span>
+    </div>
+    <p class="text-muted">Summarizes engagement levels across academic departments.</p>
+    {% if report4 %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th>Unique Participating Students</th>
+                    <th>Total Club Memberships</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report4 %}
+                <tr>
+                    <td><strong>{{ row[0] }}</strong></td>
+                    <td>{{ row[1] }} students</td>
+                    <td><span class="badge badge-info">{{ row[2] }} memberships</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">No department participation records available.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

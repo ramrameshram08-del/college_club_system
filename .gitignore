@@ -1,0 +1,36 @@
+# ====================================================================
+# Git Ignore Configuration
+# College Club Event Management System
+# ====================================================================
+
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# PyInstaller temporary build artifacts
+build/
+dist/
+*.spec
+
+# Local SQLite databases (created automatically on first run)
+*.db
+*.sqlite3
+
+# Virtual environments
+venv/
+env/
+.env
+ENV/
+
+# IDE configurations
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini

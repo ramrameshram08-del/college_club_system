@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Home - College Club Event Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Welcome to College Club Event Management System</h1>
+    <p class="subtitle">Discover student clubs, explore upcoming events, and participate across campus.</p>
+</div>
+
+<!-- Stats Counter Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Students</h3>
+        <p class="stat-number">{{ total_students }}</p>
+        <a href="{{ url_for('students') }}" class="stat-link">View Students &rarr;</a>
+    </div>
+    <div class="stat-card">
+        <h3>Active Clubs</h3>
+        <p class="stat-number">{{ total_clubs }}</p>
+        <a href="{{ url_for('clubs') }}" class="stat-link">View Clubs &rarr;</a>
+    </div>
+    <div class="stat-card">
+        <h3>Upcoming Events</h3>
+        <p class="stat-number">{{ upcoming_count }}</p>
+        <a href="{{ url_for('events') }}" class="stat-link">View Events &rarr;</a>
+    </div>
+</div>
+
+<!-- Upcoming Events Section -->
+<div class="section-card">
+    <div class="section-title-bar">
+        <h2>📅 Upcoming Events</h2>
+        <a href="{{ url_for('events') }}" class="btn btn-primary btn-sm">+ Register for Event</a>
+    </div>
+
+    {% if upcoming_events %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Event ID</th>
+                    <th>Event Name</th>
+                    <th>Club</th>
+                    <th>Date</th>
+                    <th>Venue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ev in upcoming_events %}
+                <tr>
+                    <td>#{{ ev[0] }}</td>
+                    <td><strong>{{ ev[1] }}</strong></td>
+                    <td><span class="badge badge-club">{{ ev[4] }}</span></td>
+                    <td>{{ ev[2] }}</td>
+                    <td>{{ ev[3] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">No upcoming events found. Create one from the <a href="{{ url_for('events') }}">Events page</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}

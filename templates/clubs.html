@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Clubs - College Club System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🏛️ College Clubs</h1>
+    <p class="subtitle">Browse student clubs, check active rosters, or enroll students into clubs.</p>
+</div>
+
+<div class="grid-2-col">
+    <!-- Club Directory -->
+    <div class="section-card">
+        <h2>Clubs Directory</h2>
+        {% if clubs %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Club Name</th>
+                        <th>Category</th>
+                        <th>Faculty Coordinator</th>
+                        <th>Members</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clubs %}
+                    <tr class="{% if selected_club_id and selected_club_id|int == c[0] %}row-highlight{% endif %}">
+                        <td><strong>{{ c[1] }}</strong></td>
+                        <td><span class="badge badge-info">{{ c[2] }}</span></td>
+                        <td>{{ c[3] }}</td>
+                        <td>{{ c[4] }} members</td>
+                        <td>
+                            <a href="{{ url_for('clubs', selected_club=c[0]) }}" class="btn btn-secondary btn-sm">View Members</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state">No clubs found.</p>
+        {% endif %}
+    </div>
+
+    <!-- Join Club Form -->
+    <div class="section-card">
+        <h2>🤝 Join a Club</h2>
+        <p class="text-muted">Enroll a student into a club (Creates record in MEMBERSHIP table):</p>
+        <form method="POST" action="{{ url_for('clubs') }}" class="form-container">
+            <div class="form-group">
+                <label for="student_id">Select Student:</label>
+                <select id="student_id" name="student_id" required>
+                    <option value="">-- Choose Student --</option>
+                    {% for s in students %}
+                    <option value="{{ s[0] }}">{{ s[1] }} (ID: {{ s[0] }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="club_id">Select Club:</label>
+                <select id="club_id" name="club_id" required>
+                    <option value="">-- Choose Club --</option>
+                    {% for c in clubs %}
+                    <option value="{{ c[0] }}" {% if selected_club_id and selected_club_id|int == c[0] %}selected{% endif %}>
+                        {{ c[1] }} ({{ c[2] }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Join Club</button>
+        </form>
+    </div>
+</div>
+
+<!-- Club Members Viewer (Using club_member_list View) -->
+{% if selected_club_id %}
+<div class="section-card mt-20">
+    <div class="section-title-bar">
+        <h2>👥 Members of: {{ selected_club_name }}</h2>
+        <a href="{{ url_for('clubs') }}" class="btn btn-secondary btn-sm">Clear Filter</a>
+    </div>
+
+    {% if members %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Year</th>
+                    <th>Joined Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in members %}
+                <tr>
+                    <td>#{{ m[0] }}</td>
+                    <td><strong>{{ m[1] }}</strong></td>
+                    <td>{{ m[2] }}</td>
+                    <td>{{ m[3] }}</td>
+                    <td>Year {{ m[4] }}</td>
+                    <td>{{ m[5] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">No members have joined {{ selected_club_name }} yet.</p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
