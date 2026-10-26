@@ -17,20 +17,20 @@ app.secret_key = config.SECRET_KEY
 # --------------------------------------------------------------------
 # Database Connection Helper
 # Tries Oracle XE first. If Oracle is not running locally, seamlessly
-# falls back to local database so the application works out-of-the-box.
+# falls back to the shared persistent local SQLite database.
 # --------------------------------------------------------------------
 def get_db_connection():
     try:
         conn = oracledb.connect(
             user=config.DB_CONFIG["user"],
             password=config.DB_CONFIG["password"],
-            dsn=config.DB_CONFIG["dsn"]
+            dsn=config.DB_CONFIG["dsn"],
+            tcp_connect_timeout=0.5
         )
         return conn, "oracle"
     except oracledb.Error:
-        # Oracle XE is offline; use local SQLite database fallback
-        db_local.init_local_db()
-        conn = sqlite3.connect(db_local.DB_FILE)
+        # Oracle XE is offline; use shared persistent local database
+        conn = db_local.connect_local_db()
         return conn, "sqlite"
 
 
@@ -82,7 +82,10 @@ def index():
 
     except Exception as err:
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
         flash(f"Error loading dashboard: {err}", "error")
         return render_template("index.html", total_students=0, total_clubs=0, upcoming_count=0, upcoming_events=[])
 
@@ -120,10 +123,12 @@ def students():
                         "yr": int(year)
                     })
                     conn.commit()
+                    cursor.close()
+                    conn.close()
                     flash(f"Student '{name}' added successfully!", "success")
                     return redirect(url_for("students"))
-                except Exception:
-                    flash("Error: A student with this email already exists or invalid year.", "error")
+                except Exception as ex:
+                    flash(f"Error adding student: Email already exists or invalid year. ({ex})", "error")
 
         # get all students ordered by ID
         cursor.execute("""
@@ -140,7 +145,10 @@ def students():
 
     except Exception as err:
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
         flash(f"Error loading students: {err}", "error")
         return render_template("students.html", students=[])
 
@@ -171,10 +179,12 @@ def clubs():
                         VALUES (:s_id, :c_id, {now_val})
                     """, {"s_id": int(student_id), "c_id": int(club_id)})
                     conn.commit()
+                    cursor.close()
+                    conn.close()
                     flash("Student joined the club successfully!", "success")
                     return redirect(url_for("clubs", selected_club=club_id))
-                except Exception:
-                    flash("This student is already a member of the selected club.", "error")
+                except Exception as ex:
+                    flash(f"Error: This student is already a member of the selected club. ({ex})", "error")
 
         # get all clubs with member count
         cursor.execute("""
@@ -225,7 +235,10 @@ def clubs():
 
     except Exception as err:
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
         flash(f"Error loading clubs: {err}", "error")
         return render_template("clubs.html", clubs=[], students=[], members=[], selected_club_id=None, selected_club_name=None)
 
@@ -262,6 +275,8 @@ def events():
                     "cid": int(club_id)
                 })
                 conn.commit()
+                cursor.close()
+                conn.close()
                 flash(f"Event '{event_name}' created successfully!", "success")
                 return redirect(url_for("events"))
 
@@ -317,7 +332,10 @@ def events():
 
     except Exception as err:
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
         flash(f"Error loading events: {err}", "error")
         return render_template("events.html", events=[], students=[], clubs=[], upcoming_events=[], active_registrations=[])
 
@@ -391,7 +409,10 @@ def register_for_event():
 
     except Exception as err:
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
         flash(f"Error processing registration: {err}", "error")
 
     return redirect(url_for("events"))
@@ -429,7 +450,10 @@ def cancel_registration():
 
     except Exception as err:
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
         flash(f"Database error during cancellation: {err}", "error")
 
     return redirect(url_for("events"))
@@ -506,7 +530,10 @@ def reports():
 
     except Exception as err:
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
         flash(f"Error loading reports: {err}", "error")
         return render_template("reports.html", report1=[], report2=[], report3=[], report4=[])
 

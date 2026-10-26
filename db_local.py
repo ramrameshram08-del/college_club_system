@@ -1,17 +1,39 @@
 # ====================================================================
-# Local Fallback Database Helper
-# Allows the web app to run immediately when Oracle XE is offline
+# Local Database Helper (SQLite Persistent Storage)
+# Ensures that both UI (Flask / college_club_app.exe) and CLI (view_db.py / view_db.exe)
+# use the EXACT same database file on disk with full persistence and concurrency.
 # ====================================================================
 
-import sqlite3
+import sys
 import os
+import sqlite3
 from datetime import date, timedelta
 
-DB_FILE = os.path.join(os.path.dirname(__file__), "college_club_local.db")
+def get_base_dir():
+    """
+    Returns the real directory where the project/executable is located.
+    In PyInstaller onefile mode, sys.executable points to the .exe file location,
+    preventing files from being written to the temporary _MEIxxxxxx extraction folder.
+    """
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(os.path.abspath(sys.executable))
+    return os.path.dirname(os.path.abspath(__file__))
+
+def get_db_file():
+    return os.path.join(get_base_dir(), "college_club_local.db")
+
+# Backwards-compatible variable pointing to real disk location
+DB_FILE = get_db_file()
 
 def init_local_db():
-    conn = sqlite3.connect(DB_FILE)
+    db_path = get_db_file()
+    conn = sqlite3.connect(db_path, timeout=10.0)
     cursor = conn.cursor()
+
+    # Enable WAL mode for high concurrency between UI and CLI
+    cursor.execute("PRAGMA journal_mode = WAL;")
+    cursor.execute("PRAGMA busy_timeout = 5000;")
+    cursor.execute("PRAGMA foreign_keys = ON;")
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS STUDENT (
@@ -68,10 +90,9 @@ def init_local_db():
         )
     """)
 
-    # Views
-    cursor.execute("DROP VIEW IF EXISTS event_registration_count")
+    # Views (create if not exist)
     cursor.execute("""
-        CREATE VIEW event_registration_count AS
+        CREATE VIEW IF NOT EXISTS event_registration_count AS
         SELECT 
             e.event_id,
             e.event_name,
@@ -85,9 +106,8 @@ def init_local_db():
         GROUP BY e.event_id, e.event_name, e.event_date, e.venue, c.club_name
     """)
 
-    cursor.execute("DROP VIEW IF EXISTS club_member_list")
     cursor.execute("""
-        CREATE VIEW club_member_list AS
+        CREATE VIEW IF NOT EXISTS club_member_list AS
         SELECT 
             c.club_id,
             c.club_name,
@@ -103,7 +123,7 @@ def init_local_db():
         JOIN STUDENT s ON m.student_id = s.student_id
     """)
 
-    # Populate sample data if empty
+    # Populate initial sample data ONLY if the STUDENT table is brand new/empty
     cursor.execute("SELECT COUNT(*) FROM STUDENT")
     if cursor.fetchone()[0] == 0:
         today = date.today()
@@ -190,6 +210,19 @@ def init_local_db():
     conn.commit()
     conn.close()
 
+def connect_local_db():
+    """
+    Connects to the persistent local SQLite database file on disk.
+    Configured with autocommit (isolation_level=None), WAL journal mode,
+    and a busy timeout so UI and CLI can read/write concurrently without locking.
+    """
+    init_local_db()
+    conn = sqlite3.connect(get_db_file(), timeout=10.0, isolation_level=None)
+    conn.execute("PRAGMA foreign_keys = ON;")
+    conn.execute("PRAGMA journal_mode = WAL;")
+    conn.execute("PRAGMA busy_timeout = 5000;")
+    return conn
+
 if __name__ == "__main__":
     init_local_db()
-    print("Local database initialized successfully!")
+    print(f"Local database initialized successfully at: {get_db_file()}")
